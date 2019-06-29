@@ -1,0 +1,8 @@
+[package]
+name = "unsarc"
+version = "0.1.0"
+authors = ["Alexander Peters <alexander.n.peters@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1.3.2"
