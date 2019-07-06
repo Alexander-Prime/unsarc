@@ -25,6 +25,11 @@ impl Sfnt {
     }
 
     pub fn read_name(&self, offset: usize) -> String {
-        String::from("")
+        let slice = &self.names[offset..];
+        let end = match slice.iter().position(|&byte| byte == 0) {
+            Some(end) => end,
+            None => self.names.len(),
+        };
+        String::from_utf8(Vec::from(&slice[..end])).unwrap_or(String::default())
     }
 }

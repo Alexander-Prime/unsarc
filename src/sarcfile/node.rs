@@ -10,13 +10,13 @@ pub struct Node {
 
 impl Node {
     pub fn from_bytes(buf: &[u8], bom: ByteOrderMark) -> Node {
-        let file_attributes = bom.read_u32(&buf[0x04..0x07]);
+        let file_attributes = bom.read_u32(&buf[0x04..=0x07]);
         Node {
-            filename_hash: bom.read_u32(&buf[0x00..0x03]),
+            filename_hash: bom.read_u32(&buf[0x00..=0x03]),
             flags: (file_attributes >> 16) as u16,
             filename_offset: (file_attributes & 0xffff) as u16,
-            start_offset: bom.read_u32(&buf[0x08..0x0b]),
-            end_offset: bom.read_u32(&buf[0x0c..0x0f]),
+            start_offset: bom.read_u32(&buf[0x08..=0x0b]),
+            end_offset: bom.read_u32(&buf[0x0c..=0x0f]),
         }
     }
 }

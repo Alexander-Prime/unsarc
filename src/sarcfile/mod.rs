@@ -33,9 +33,9 @@ impl SarcFile {
 
     fn from_reader(mut input: Box<Read>) -> Result<SarcFile> {
         // Don't need a BufReader here, it would only save at best one read() call
-        let mut buf: Vec<u8> = Vec::with_capacity(0x14);
+        let mut buf: Vec<u8> = vec![0; 0x14];
 
-        if let Err(e) = input.read(&mut buf[0x00..0x13]) {
+        if let Err(e) = input.read(&mut buf[0x00..=0x13]) {
             return Err(Error::ReadFailed(e));
         }
 
@@ -55,7 +55,8 @@ impl SarcFile {
             Err(e) => return Err(e),
         };
 
-        let sfnt = match Sfnt::from_bytes(&buf[sfat.length()..], header.bom) {
+        let sfnt_start = header.length as usize + sfat.length();
+        let sfnt = match Sfnt::from_bytes(&buf[sfnt_start..], header.bom) {
             Ok(sfnt) => sfnt,
             Err(e) => return Err(e),
         };
@@ -67,4 +68,33 @@ impl SarcFile {
             sfnt,
         })
     }
+
+    pub fn nodes(&self) -> NodeIterator {
+        NodeIterator {
+            sarc: self,
+            index: 0,
+        }
+    }
 }
+
+pub struct NodeIterator<'a> {
+    sarc: &'a SarcFile,
+    index: usize,
+}
+
+impl<'a> Iterator for NodeIterator<'a> {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.sarc.sfat.node_count as usize {
+            None
+        } else {
+            let sfat = &self.sarc.sfat;
+            let sfnt = &self.sarc.sfnt;
+            let name = sfnt.read_name((sfat.nodes[self.index].filename_offset * 4) as usize);
+            self.index += 1;
+            Some(name)
+        }
+    }
+}
+
