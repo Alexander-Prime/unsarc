@@ -1,16 +1,15 @@
 mod bom;
-mod sarcfile;
+mod sarc;
 
-use sarcfile::SarcFile;
+use sarc::reader::SarcReader;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     for path in &args[1..] {
-        let file = SarcFile::open(path).unwrap();
+        let file = SarcReader::open(path).unwrap();
         for node in file.nodes() {
             println!("{}", node);
         }
     }
-
 }

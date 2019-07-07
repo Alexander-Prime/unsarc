@@ -1,37 +1,29 @@
-mod error;
-mod header;
-mod magic;
-mod node;
-mod result;
-mod sfat;
-mod sfnt;
-
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::vec::Vec;
 
-use self::error::Error;
-use self::header::Header;
-use self::result::Result;
-use self::sfat::Sfat;
-use self::sfnt::Sfnt;
+use super::error::Error;
+use super::header::Header;
+use super::result::Result;
+use super::sfat::Sfat;
+use super::sfnt::Sfnt;
 
-pub struct SarcFile {
+pub struct SarcReader {
     pub input: Box<Read>,
     pub header: Header,
     pub sfat: Sfat,
     pub sfnt: Sfnt,
 }
 
-impl SarcFile {
-    pub fn open(path: &str) -> Result<SarcFile> {
+impl SarcReader {
+    pub fn open(path: &str) -> Result<SarcReader> {
         match File::open(path).and_then(|mut file| file.seek(SeekFrom::Start(0x00)).map(|_| file)) {
             Ok(file) => Self::from_reader(Box::from(file)),
             Err(e) => Err(Error::ReadFailed(e)),
         }
     }
 
-    fn from_reader(mut input: Box<Read>) -> Result<SarcFile> {
+    fn from_reader(mut input: Box<Read>) -> Result<SarcReader> {
         // Don't need a BufReader here, it would only save at best one read() call
         let mut buf: Vec<u8> = vec![0; 0x14];
 
@@ -61,7 +53,7 @@ impl SarcFile {
             Err(e) => return Err(e),
         };
 
-        Ok(SarcFile {
+        Ok(SarcReader {
             input,
             header,
             sfat,
@@ -78,7 +70,7 @@ impl SarcFile {
 }
 
 pub struct NodeIterator<'a> {
-    sarc: &'a SarcFile,
+    sarc: &'a SarcReader,
     index: usize,
 }
 
