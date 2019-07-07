@@ -4,9 +4,13 @@ mod sarcfile;
 use sarcfile::SarcFile;
 
 fn main() {
-    let file = SarcFile::open("./data.pack").unwrap();
+    let args: Vec<String> = std::env::args().collect();
 
-    for node in file.nodes() {
-        println!("{}", node);
+    for path in &args[1..] {
+        let file = SarcFile::open(path).unwrap();
+        for node in file.nodes() {
+            println!("{}", node);
+        }
     }
+
 }
