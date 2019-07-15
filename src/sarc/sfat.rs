@@ -1,8 +1,13 @@
+use byteorder::{ByteOrder, BE};
+
 use crate::bom::ByteOrderMark;
 
-use super::magic::Magic;
+use crate::Error;
+use crate::Result;
+
 use super::node::Node;
-use super::result::Result;
+
+pub const MAGIC: u32 = 0x53_46_41_54; // SFAT
 
 const NODE_SIZE: usize = 0x10;
 
@@ -15,7 +20,9 @@ pub struct Sfat {
 
 impl Sfat {
     pub fn from_bytes(buf: &[u8], bom: ByteOrderMark) -> Result<Sfat> {
-        Magic::check(&buf[0x00..=0x03], "SFAT").map(|_| {
+        let m = BE::read_u32(&buf[..=0x03]);
+        if m == MAGIC {
+            println!("✔ SFAT");
             let header_length = bom.read_u16(&buf[0x04..=0x05]);
             let node_count = bom.read_u16(&buf[0x06..=0x07]);
             let hash_key = bom.read_u32(&buf[0x08..=0x0b]);
@@ -27,13 +34,15 @@ impl Sfat {
                 nodes.push(Node::from_bytes(&buf[start..end], bom));
             }
 
-            Sfat {
+            Ok(Sfat {
                 header_length,
                 node_count,
                 hash_key,
                 nodes,
-            }
-        })
+            })
+        } else {
+            Err(Error::BadMagic(m))
+        }
     }
 
     pub fn length(&self) -> usize {

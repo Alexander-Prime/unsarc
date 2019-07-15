@@ -1,7 +1,11 @@
+use byteorder::{ByteOrder, BE};
+
 use crate::bom::ByteOrderMark;
 
-use super::magic::Magic;
-use super::result::Result;
+use crate::Error;
+use crate::Result;
+
+pub const MAGIC: u32 = 0x53_46_4e_54; // SFNT
 
 pub struct Sfnt {
     pub header_length: u16,
@@ -11,17 +15,21 @@ pub struct Sfnt {
 
 impl Sfnt {
     pub fn from_bytes(buf: &[u8], bom: ByteOrderMark) -> Result<Sfnt> {
-        Magic::check(&buf[0x00..=0x03], "SFNT").map(|_| {
+        let m = BE::read_u32(&buf[..=0x03]);
+        if m == MAGIC {
+            println!("✔ SFNT");
             let header_length = bom.read_u16(&buf[0x04..=0x05]);
             let reserved = Vec::from(&buf[0x06..=0x07]);
             let names = Vec::from(&buf[0x08..]);
 
-            Sfnt {
+            Ok(Sfnt {
                 header_length,
                 reserved,
                 names,
-            }
-        })
+            })
+        } else {
+            Err(Error::BadMagic(m))
+        }
     }
 
     pub fn read_name(&self, offset: usize) -> String {

@@ -2,9 +2,10 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::vec::Vec;
 
-use super::error::Error;
+use crate::Error;
+use crate::Result;
+
 use super::header::Header;
-use super::result::Result;
 use super::sfat::Sfat;
 use super::sfnt::Sfnt;
 
@@ -17,13 +18,13 @@ pub struct SarcReader {
 
 impl SarcReader {
     pub fn open(path: &str) -> Result<SarcReader> {
-        match File::open(path).and_then(|mut file| file.seek(SeekFrom::Start(0x00)).map(|_| file)) {
-            Ok(file) => Self::from_reader(Box::from(file)),
-            Err(e) => Err(Error::ReadFailed(e)),
-        }
+        File::open(path)
+            .and_then(|mut file| file.seek(SeekFrom::Start(0x00)).map(|_| file))
+            .map_err(|e| Error::ReadFailed(e))
+            .and_then(|file| Self::from_reader(Box::from(file)))
     }
 
-    fn from_reader(mut input: Box<Read>) -> Result<SarcReader> {
+    pub fn from_reader(mut input: Box<Read>) -> Result<SarcReader> {
         // Don't need a BufReader here, it would only save at best one read() call
         let mut buf: Vec<u8> = vec![0; 0x14];
 
@@ -89,4 +90,3 @@ impl<'a> Iterator for NodeIterator<'a> {
         }
     }
 }
-

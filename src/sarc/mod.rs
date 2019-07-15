@@ -1,9 +1,8 @@
 pub mod reader;
 
-mod error;
 mod header;
-mod magic;
 mod node;
-mod result;
 mod sfat;
 mod sfnt;
+
+pub const MAGIC: u32 = 0x53_41_52_43; // SARC
