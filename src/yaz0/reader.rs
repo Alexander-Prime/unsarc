@@ -58,7 +58,7 @@ impl Read for Yaz0Reader {
                     // Run length encoding
                     self.input.read(&mut chunk[..=0x01]);
                     let rewind: usize =
-                        (((chunk[0x00] as usize & 0x0f) << 8) | chunk[0x01] as usize);
+                        1 + (((chunk[0x00] as usize & 0x0f) << 8) | chunk[0x01] as usize);
                     let mut size = (chunk[0x00] as usize & 0xf0) >> 4;
                     if size == 0 {
                         // Length uses an extra byte
